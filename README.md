@@ -147,6 +147,26 @@
 
 API проверяет право на просмотр и выдаёт подписанную ссылку. Плеер обращается непосредственно в CDN. При наличии файла в кеше CDN отдаёт его; иначе получает из исходного хранилища сервиса и кеширует [10]. Заполнение кеша — отдельная операция, а не этап балансировки. В каждом узле не требуется хранить весь каталог.
 
+## 4. Локальная балансировка нагрузки
+
+### 4.1. Балансировка запросов
+Используем L7-балансировку, потому что за одним доменом API работают разные сервисы. Реализация - AWS ALB. В каждом регионе два ALB: публичный для клиентов и внутренний для межсервисных запросов. Внутренний доступен только из сети приложения [15]. Соответственно, всего 8 ALB. Далее выбирается экземпляр сервиса с наименьшим числом незавершённых запросов [14].
+
+### 4.2. Отказоустойчивость
+
+LB и сервисы работают в двух зонах. Каждая рассчитана на всю нагрузку региона с резервом из раздела 3.2, чтобы выдержать отказ другой зоны.ALB проверяет экземпляры HTTP-запросами и исключает неисправные из балансировки [16]. При отказе региона переключаем трафик по разделу 3.3. Межсервисные вызовы ограничиваем тайм-аутами.
+
+### 4.3. Терминация TLS (SSL)
+
+TLS завершается на публичном ALB [17], далее используется HTTP в закрытой сети. Видео и статику обслуживает CloudFront, минуя региональные ALB.
+Общий пик - 106 871 рукопожатие/с. Для регионов используем нагрузку с резервом из раздела 3.2:
+| Регион | TLS-рукопожатий/с |
+|---|---:|
+| Вирджиния | 81051 |
+| Франкфурт | 81051 |
+| Сан-Паулу | 22700 |
+| Сингапур | 24495 |
+
 ## Список источников
 
 1. [Netflix Q4 2024 Shareholder Letter](https://s22.q4cdn.com/959853165/files/doc_financials/2024/q4/FINAL-Q4-24-Shareholder-Letter.pdf)
@@ -162,4 +182,9 @@ API проверяет право на просмотр и выдаёт подп
 11. [Amazon CloudFront — ограничение доступа и подписанные URL](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
 12. [Amazon Route 53 — TTL](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-basic.html#rrsets-values-basic-ttl)
 13. [AWS Application Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html)
-
+14. [AWS ALB — алгоритмы балансировки](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html)
+15. [AWS — публичные и внутренние балансировщики](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html)
+16. [AWS ALB — проверки доступности](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html)
+17. [AWS ALB — HTTPS](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html)
+18. [Лекция 4 «Локальная балансировка нагрузки», 25.09.2023 — слайды 3, 21, 25–31](https://cloud.mail.ru/public/WPnW/oV8DwKGd1)
+19. [AWS ALB — правила по пути HTTP-запроса](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/rule-condition-types.html)
