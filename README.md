@@ -250,6 +250,30 @@ TLS завершается на публичном ALB [17], далее испо
 #### Онлайн
 
 Пользователь вводит запрос, например «интерстеллар». Сервис поиска передаёт его в Elasticsearch. По обратному индексу Elasticsearch находит подходящие документы. BM25 выставляет каждому из них балл относительно запроса: учитывает редкость совпавших слов, их частоту в документе и длину текста. Поиск выполняется по названию, описанию, именам актёров и режиссёров; совпадения в названии получают больший вес. Выбранные пользователем жанр и год применяем как фильтры.
+## 8. Технологии
+
+| № | Область | Технология | Какую проблему решает | Альтернативы | Почему выбрана |
+|---|---|---|---|---|---|
+| 1 | Инфраструктура | [Amazon EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html) | Серверы для запуска сервисов | Azure Virtual Machines, Google Compute Engine | Единая сеть с ALB и управление экземплярами через AWS Auto Scaling |
+| 2 | Разработка и сборка | [Docker](https://docs.docker.com/get-started/docker-overview/) | Упаковка приложения с зависимостями | Podman, Buildah | Один процесс сборки и запуска для EC2, Compose и интеграционных тестов |
+| 3 | Автоматизация проверок | [GitHub Actions](https://docs.github.com/en/actions/get-started/understand-github-actions) | Запуск сборки и тестов после изменения кода | GitLab CI, Jenkins | Проверки рядом с кодом на GitHub, без собственного сервера CI |
+| 4 | Нагрузочное тестирование | [k6](https://grafana.com/docs/k6/latest/testing-guides/api-load-testing/) | Проверка задержек и ошибок при расчётной нагрузке | JMeter, Locust | Сценарии на TypeScript и автоматические критерии успешности в CI |
+| 5 | Мониторинг | [CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html) | Метрики, журналы и оповещения о проблемах | Datadog, Zabbix | Показатели AWS и приложения вместе, без своего сервера мониторинга |
+| 6 | Глобальная балансировка | [Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html) | Выбор регионального адреса API | Cloudflare Load Balancing, PowerDNS | Географический выбор региональных ALB без собственных DNS-серверов |
+| 7 | Локальная балансировка | [AWS ALB](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) | Распределение HTTP-запросов между экземплярами сервисов | NGINX, HAProxy | Управляемая HTTP-балансировка в двух зонах; узлы обслуживает AWS |
+| 8 | Доставка контента | [CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html) | Доставка видео и статики через CDN | Akamai, Fastly | Доставка из S3, закрытый источник и подписанный доступ в AWS |
+| 9 | Серверная разработка | [Go](https://go.dev/doc/) | Реализация HTTP API и бизнес-логики сервисов | Java, Python | Горутины для сетевых обработчиков и выпуск в исполняемом файле |
+| 10 | Локальная разработка | [Docker Compose](https://docs.docker.com/compose/) | Совместный запуск нескольких сервисов на компьютере разработчика | Podman Compose, Minikube | Совместный локальный запуск Docker-сервисов по одному описанию |
+| 11 | Описание API | [Swagger Editor](https://swagger.io/open-source/swagger-editor/) | Согласование запросов, ответов и ошибок API | Postman, Stoplight | Редактирование и проверка текстового OpenAPI-контракта в Git |
+| 12 | Проверка интерфейса | [Playwright](https://playwright.dev/docs/intro) | Автоматическая проверка действий пользователя в браузере | Selenium, Cypress | Три браузерных движка, ожидания и разбор ошибок в одном наборе |
+| 13 | Безопасность сборки | [Trivy](https://trivy.dev/docs/latest/guide/) | Уязвимости образов и ошибки конфигурации Terraform | Grype, Snyk | Один инструмент для проверки Docker-образов и конфигурации Terraform |
+| 14 | Защита HTTP | [AWS WAF](https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html) | Фильтрация вредоносных запросов и ограничение их частоты | Cloudflare WAF, ModSecurity | Фильтрация на существующих ALB и CloudFront без отдельного прокси |
+| 15 | Управление инфраструктурой | [Terraform](https://developer.hashicorp.com/terraform/intro) | Повторяемое создание и изменение облачных ресурсов | Pulumi, CloudFormation | Единая декларативная конфигурация и повторяемые модули четырёх регионов |
+| 16 | Интеграционное тестирование | [Testcontainers](https://testcontainers.com/) | Проверка взаимодействия сервиса с настоящими зависимостями | Docker Compose, Dockertest | Готовые модули, ожидание готовности и управление зависимостями из Go-теста |
+| 17 | Разработка веб-клиента | [TypeScript](https://www.typescriptlang.org/docs/handbook/intro) | Проверка типов при работе интерфейса с данными API | JavaScript, JavaScript с Flow | Проверка типов и получение JavaScript одним компилятором; общий язык с тестами |
+| 18 | Трассировка запросов | [OpenTelemetry](https://opentelemetry.io/docs/what-is-opentelemetry/) | Поиск задержки внутри цепочки межсервисных вызовов | Datadog SDK, New Relic Agents | Стандартная трассировка с отправкой в уже выбранный CloudWatch |
+| 19 | Подготовка видео | [FFmpeg](https://github.com/FFmpeg/FFmpeg) | Создание вариантов качества и файлов для потокового просмотра | AWS MediaConvert, GStreamer | Одинаковая версия и параметры обработки локально и на EC2 |
+| 20 | Воспроизведение видео | [Shaka Player](https://github.com/shaka-project/shaka-player) | Просмотр в браузере с выбором качества под соединение | hls.js, Video.js | Готовая адаптивная загрузка HLS/DASH без собственной реализации плеера
 ## Список источников
 
 1. [Netflix Q4 2024 Shareholder Letter](https://s22.q4cdn.com/959853165/files/doc_financials/2024/q4/FINAL-Q4-24-Shareholder-Letter.pdf)
