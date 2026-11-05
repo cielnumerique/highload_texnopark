@@ -278,8 +278,18 @@ TLS завершается на публичном ALB [17], далее испо
 | 22 | Хранение и поиск логов | [CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html) | Хранение и поиск журналов разных экземпляров | Loki, Datadog Logs | Управляемое хранилище AWS с поиском через Logs Insights и прямой доставкой из Docker |
 | 23 | Хранение метрик | [CloudWatch Metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html) | Хранение числовых показателей системы во времени | Mimir, Datadog Metrics | Показатели AWS и приложения доступны в одной системе для графиков и оповещений |
 | 24 | Хранение трасс | [AWS X-Ray](https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html) | Хранение и анализ цепочек межсервисных вызовов | Tempo, Datadog APM | Принимает трассы OpenTelemetry и интегрируется с наблюдением за приложением в AWS
-## Список источников
 
+## 10. Схема проекта
+
+![Схема проекта](10-project-schema.png)
+
+Используем **Front proxy** — вход через ALB, **Database per service** — данные принадлежат сервису-владельцу, **API Composition** — сбор ответа из нескольких сервисов [18].
+
+Route 53 выбирает регион API. Публичный ALB завершает TLS и направляет запрос нужному сервису. Межсервисные HTTP-вызовы проходят через внутренний ALB. Например, рекомендации получают историю у активности, карточки — у каталога и возвращают готовую выдачу клиенту.
+
+Видео и превью клиент получает через CloudFront, который при промахе кеша читает S3. 
+
+## Список источников
 1. [Netflix Q4 2024 Shareholder Letter](https://s22.q4cdn.com/959853165/files/doc_financials/2024/q4/FINAL-Q4-24-Shareholder-Letter.pdf)
 2. [Netflix Q4 2023 Shareholder Letter](https://s22.q4cdn.com/959853165/files/doc_financials/2023/q4/NEW-FINAL-Q4-23-Shareholder-Letter.pdf)
 3. [AWS — регионы и зоны доступности](https://docs.aws.amazon.com/global-infrastructure/latest/regions/aws-regions.html)
@@ -294,4 +304,11 @@ TLS завершается на публичном ALB [17], далее испо
 12. [Amazon Route 53 — TTL](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-basic.html#rrsets-values-basic-ttl)
 13. [AWS Application Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html)
 14. [AWS ALB — алгоритмы балансировки](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html)
-15. [AWS — публичные и внутренние балансировщики](
+15. [AWS — публичные и внутренние балансировщики](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html)
+16. [AWS ALB — проверки состояния экземпляров](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html)
+17. [AWS ALB — терминация TLS](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html)
+18. [П. Шипилов — Лекция 9. Технологии и архитектура (ч. 2), слайды 11–18](https://disk.yandex.ru/i/Vl6rhhE4zh4Hxw)
+19. [AWS ALB — группы серверов и протоколы взаимодействия](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)
+20. [ScyllaDB — Change Data Capture](https://docs.scylladb.com/manual/stable/features/cdc/index.html)
+21. [Elasticsearch — переключение alias](https://www.elastic.co/docs/manage-data/data-store/aliases)
+22. [CloudFront — подписанные URL и cookies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-choosing-signed-urls-cookies.html)
